@@ -21,6 +21,23 @@ class TasksRelationManager extends RelationManager
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
+                Forms\Components\Select::make('priority')
+                    ->options([
+                        'low' => 'Low',
+                        'medium' => 'Medium',
+                        'high' => 'High',
+                    ])->default('medium'),
+                Forms\Components\Select::make('status')
+                    ->options([
+                        'pending' => 'Pending',
+                        'in_progress' => 'In Progress',
+                        'completed' => 'Completed',
+                    ])->default('pending'),
+                Forms\Components\DatePicker::make('due_date'),
+                Forms\Components\Select::make('parent_id')
+                    ->label('Parent Task')
+                    ->options(fn() => $this->ownerRecord->tasks->pluck('name', 'id')->toArray())
+                    ->placeholder('Select a parent task'),
             ]);
     }
 
@@ -30,6 +47,11 @@ class TasksRelationManager extends RelationManager
             ->recordTitleAttribute('name')
             ->columns([
                 Tables\Columns\TextColumn::make('name'),
+                Tables\Columns\TextColumn::make('priority'),
+                Tables\Columns\TextColumn::make('status'),
+                Tables\Columns\TextColumn::make('due_date'),
+                Tables\Columns\TextColumn::make('parent.name')
+                    ->label('Parent Task'),
             ])
             ->filters([
                 //

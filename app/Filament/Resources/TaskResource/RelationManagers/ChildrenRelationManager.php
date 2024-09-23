@@ -32,7 +32,7 @@ class ChildrenRelationManager extends RelationManager
                         'pending' => 'Pending',
                         'in_progress' => 'In Progress',
                         'completed' => 'Completed',
-                    ]),
+                    ])->default('pending'),
                 Forms\Components\DatePicker::make('due_date'),
                 Forms\Components\Hidden::make('project_id')
                     ->default(fn(RelationManager $livewire) => $livewire->ownerRecord->project_id), // Ana görevin project_id'sini otomatik olarak ata

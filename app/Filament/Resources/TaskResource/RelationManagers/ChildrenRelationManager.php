@@ -29,9 +29,10 @@ class ChildrenRelationManager extends RelationManager
                     ]),
                 Forms\Components\Select::make('status')
                     ->options([
-                        'pending' => 'Pending',
-                        'in_progress' => 'In Progress',
-                        'completed' => 'Completed',
+                        'pending' => 'Beklemede',
+                        'in-progress' => 'İşlemde',
+                        'completed' => 'Tamamlandı',
+                        'rejected' => 'Yarım Bırakıldı',
                     ])->default('pending'),
                 Forms\Components\DatePicker::make('due_date'),
                 Forms\Components\Hidden::make('project_id')
@@ -47,8 +48,14 @@ class ChildrenRelationManager extends RelationManager
             ->recordTitleAttribute('name')
             ->columns([
                 Tables\Columns\TextColumn::make('name'),
+                Tables\Columns\TextColumn::make('status')
+                    ->color(fn(string $state): string => match ($state) {
+                        'pending' => 'gray',
+                        'completed' => 'success',
+                        'in_progress' => 'warning',
+                        'rejected' => 'danger',
+                    }),
                 Tables\Columns\TextColumn::make('priority'),
-                Tables\Columns\TextColumn::make('status'),
                 Tables\Columns\TextColumn::make('due_date'),
 
             ])

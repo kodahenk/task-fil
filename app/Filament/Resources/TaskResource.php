@@ -67,9 +67,10 @@ class TaskResource extends Resource
                 Forms\Components\Select::make('status')
                     ->label('Status')
                     ->options([
-                        'pending' => 'Pending',
-                        'in-progress' => 'In Progress',
-                        'completed' => 'Completed',
+                        'pending' => 'Beklemede',
+                        'in-progress' => 'İşlemde',
+                        'completed' => 'Tamamlandı',
+                        'rejected' => 'Yarım Bırakıldı',
                     ])
                     ->default('pending'),
                 Forms\Components\DatePicker::make('completed_at')
@@ -92,7 +93,37 @@ class TaskResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('children')
+                    ->label('Progress') // Sütun başlığı
+                    ->formatStateUsing(function (Task $record) {
+                        // Görevin tüm alt görevlerinin sayısını bul
+                        $totalChildren = $record->children()->count();
+
+                        // Eğer alt görev yoksa "Yorum" göster
+                        // if ($totalChildren == 0) {
+                        //     return 'Alt Görev Yok';
+                        // }
+
+                        $completedChildren = $record->children()->where('status', 'completed')->count();
+
+                        return "{$completedChildren}/{$totalChildren}";
+                    }),
+
+
+                    // açıklamada proje adı olsun
                 Tables\Columns\TextColumn::make('parent.name')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('status')
+                    // ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        'pending' => 'gray',
+                        'completed' => 'success',
+                        'in_progress' => 'warning',
+                        'rejected' => 'danger',
+                    })
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('project.name')
@@ -102,9 +133,6 @@ class TaskResource extends Resource
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('priority')
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('status')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('completed_at')
@@ -124,7 +152,7 @@ class TaskResource extends Resource
                 Tables\Actions\EditAction::make(),
             ])
             ->defaultGroup(Group::make('parent.name')
-            ->collapsible()) 
+                ->collapsible())
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

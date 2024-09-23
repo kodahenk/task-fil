@@ -47,11 +47,12 @@ class TasksRelationManager extends RelationManager
             ->recordTitleAttribute('name')
             ->columns([
                 Tables\Columns\TextColumn::make('name'),
+                Tables\Columns\TextColumn::make('parent.name')
+                    ->label('Parent Task'),
                 Tables\Columns\TextColumn::make('priority'),
                 Tables\Columns\TextColumn::make('status'),
                 Tables\Columns\TextColumn::make('due_date'),
-                Tables\Columns\TextColumn::make('parent.name')
-                    ->label('Parent Task'),
+
             ])
             ->filters([
                 //

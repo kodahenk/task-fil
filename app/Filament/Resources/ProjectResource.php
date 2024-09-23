@@ -38,7 +38,7 @@ class ProjectResource extends Resource
                     ->required(),
                 Forms\Components\Select::make('category_id')
                     ->label('Category')
-                    ->options(fn () => \App\Models\Category::pluck('name', 'id'))
+                    ->options(fn() => \App\Models\Category::pluck('name', 'id'))
                     ->required(),
                 Forms\Components\ColorPicker::make('color')
                     ->label('Color'),
@@ -106,7 +106,7 @@ class ProjectResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\CategoryRelationManager::class,
         ];
     }
 

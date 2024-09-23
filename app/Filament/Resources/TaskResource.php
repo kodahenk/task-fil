@@ -6,6 +6,8 @@ use App\Filament\Resources\TaskResource\Pages;
 use App\Models\Task;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Resources\RelationManagers\RelationManager;
+use App\Filament\Resources\TaskResource\RelationManagers;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -130,7 +132,7 @@ class TaskResource extends Resource
     public static function getRelations(): array
     {
         return [
-            // 
+            RelationManagers\ChildrenRelationManager::class,
         ];
     }
 

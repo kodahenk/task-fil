@@ -10,6 +10,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use App\Filament\Resources\TaskResource\RelationManagers;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -122,6 +123,8 @@ class TaskResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
+            ->defaultGroup(Group::make('parent.name')
+            ->collapsible()) 
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

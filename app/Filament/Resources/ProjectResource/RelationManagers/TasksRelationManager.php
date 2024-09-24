@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ProjectResource\RelationManagers;
 
+use App\Models\Task;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -46,11 +47,18 @@ class TasksRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('name')
             ->columns([
-                Tables\Columns\TextColumn::make('name'),
-                Tables\Columns\TextColumn::make('parent.name')
-                    ->label('Parent Task'),
+                Tables\Columns\TextColumn::make('name')
+                    ->description(
+                        fn(Task $record) => $record->parent?->name
+                    ),
                 Tables\Columns\TextColumn::make('priority'),
-                Tables\Columns\TextColumn::make('status'),
+                Tables\Columns\TextColumn::make('status')
+                ->color(fn(string $state): string => match ($state) {
+                    'pending' => 'gray',
+                    'completed' => 'success',
+                    'in_progress' => 'warning',
+                })
+                ,
                 Tables\Columns\TextColumn::make('due_date'),
 
             ])

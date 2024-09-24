@@ -29,7 +29,7 @@ class ProjectResource extends Resource
                 // $table->string('color')->nullable();
                 // $table->date('due_date')->nullable();
                 // $table->enum('priority', ['low', 'medium', 'high'])->default('medium');
-                // $table->enum('status', ['not-started', 'in-progress', 'completed'])->default('not-started');
+                // $table->enum('status', ['not-started', 'in_progress', 'completed'])->default('not-started');
                 Forms\Components\TextInput::make('name')
                     ->label('Name')
                     ->required(),
@@ -56,7 +56,7 @@ class ProjectResource extends Resource
                     ->label('Status')
                     ->options([
                         'not-started' => 'Not Started',
-                        'in-progress' => 'In Progress',
+                        'in_progress' => 'In Progress',
                         'completed' => 'Completed',
                     ])
                     ->default('not-started'),

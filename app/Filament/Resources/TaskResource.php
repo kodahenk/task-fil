@@ -8,8 +8,10 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use App\Filament\Resources\TaskResource\RelationManagers;
+use Carbon\Carbon;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,75 +27,86 @@ class TaskResource extends Resource
     {
         return $form
             ->schema([
-                // $table->string('name');
-                // $table->text('content')->nullable();
-                // $table->foreignId('project_id')->constrained()->onDelete('cascade');
-                // $table->timestamp('due_date')->nullable();
-                // $table->string('priority')->nullable();
-                // $table->string('status')->default('pending');
-                // $table->timestamp('completed_at')->nullable();
-                // $table->foreignId('assigned_to')->nullable()->constrained('users')->onDelete('set null');
-                // $table->timestamp('reminder')->nullable();
+                // Ana grid yapısı
+                Forms\Components\Grid::make(12) // 12 sütunlu grid yapısı
+                    ->schema([
 
-                Forms\Components\TextInput::make('name')
-                    ->label('Name')
-                    ->required(),
-                Forms\Components\Textarea::make('content')
-                    ->label('Content'),
-                Forms\Components\Select::make('project_id')
-                    ->label('Project')
-                    ->options(fn() => \App\Models\Project::pluck('name', 'id'))
-                    ->required()
-                    ->reactive(), // Add this to make it reactive
-                Forms\Components\Select::make('parent_id')
-                    ->label('Parent Task')
-                    ->options(function (callable $get) {
-                        $projectId = $get('project_id');
-                        // Ensure we only show tasks from the selected project
-                        return \App\Models\Task::where('project_id', $projectId)
-                            ->whereNull('parent_id')
-                            ->pluck('name', 'id');
-                    })
-                    ->nullable(),
-                Forms\Components\DatePicker::make('due_date')
-                    ->label('Due Date'),
-                Forms\Components\Select::make('priority')
-                    ->label('Priority')
-                    ->options([
-                        'low' => 'Low',
-                        'medium' => 'Medium',
-                        'high' => 'High',
+                        // İlk satır: col-md-6 ve col-md-6
+                        Forms\Components\TextInput::make('name')
+                            ->label('Name')
+                            ->required()
+                            ->columnSpan(5), // col-md-6 genişlik
+
+                        Forms\Components\Select::make('project_id')
+                            ->label('Project')
+                            ->options(fn() => \App\Models\Project::pluck('name', 'id'))
+                            ->required()
+                            ->reactive() // Seçim yapıldığında tetiklenir
+                            ->columnSpan(3), // col-md-6 genişlik
+
+
+                        // Üçüncü satır: col-md-6 ve col-md-6
+                        Forms\Components\Select::make('parent_id')
+                            ->label('Parent Task')
+                            ->options(function (callable $get) {
+                                $projectId = $get('project_id');
+                                // Sadece seçili projedeki görevleri göster
+                                return \App\Models\Task::where('project_id', $projectId)
+                                    ->whereNull('parent_id')
+                                    ->pluck('name', 'id');
+                            })
+                            ->nullable()
+                            ->columnSpan(4), // col-md-6 genişlik
+
+                        // İkinci satır: col-md-12 (tam genişlik)
+                        Forms\Components\RichEditor::make('content')
+                            ->label('Content')
+                            ->columnSpan(12), // col-md-12 tam genişlik
+
+
+
+                        // Dördüncü satır: col-md-4 ve col-md-4
+                        Forms\Components\Select::make('status')
+                            ->label('Status')
+                            ->options([
+                                'pending' => 'Beklemede',
+                                'in_progress' => 'İşlemde',
+                                'completed' => 'Tamamlandı',
+                                'rejected' => 'Yarım Bırakıldı',
+                            ])
+                            ->default('pending')
+                            ->columnSpan(3), // col-md-4 genişlik
+
+
+                        Forms\Components\Select::make('priority')
+                            ->label('Priority')
+                            ->options([
+                                'low' => 'Low',
+                                'medium' => 'Medium',
+                                'high' => 'High',
+                            ])
+                            ->columnSpan(3), // col-md-3 genişlik
+
+                        Forms\Components\DateTimePicker::make('due_date')
+                            ->label('Due Date')
+                            ->columnSpan(3), // col-md-3 genişlik
+
+                        Forms\Components\DateTimePicker::make('completed_at')
+                            ->label('Completed At')
+                            ->columnSpan(3), // col-md-4 genişlik
                     ]),
-                Forms\Components\Select::make('status')
-                    ->label('Status')
-                    ->options([
-                        'pending' => 'Beklemede',
-                        'in-progress' => 'İşlemde',
-                        'completed' => 'Tamamlandı',
-                        'rejected' => 'Yarım Bırakıldı',
-                    ])
-                    ->default('pending'),
-                Forms\Components\DatePicker::make('completed_at')
-                    ->label('Completed At'),
-                Forms\Components\Select::make('assigned_to')
-                    ->label('Assigned To')
-                    ->options(fn() => \App\Models\User::pluck('name', 'id'))
-                    ->nullable(),
-                Forms\Components\DatePicker::make('reminder')
-                    ->label('Reminder'),
-
-
             ]);
     }
+
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                ->description(
-                    fn(Task $record) => $record->parent?->name
-                )
+                    ->description(
+                        fn(Task $record) => $record->parent?->name
+                    )
                     ->searchable()
                     ->sortable(),
 
@@ -126,19 +139,38 @@ class TaskResource extends Resource
                 Tables\Columns\TextColumn::make('project.name')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('due_date')
+                TextColumn::make('due_date')
+                    ->label('Due Date')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->formatStateUsing(function ($state) {
+                        return Carbon::parse($state)->format('Y-m-d');
+                    })
+                    ->color(function ($state, $record) {
+                        $dueDate = Carbon::parse($state);
+                        $today = Carbon::today();
+
+                        // Görev tamamlandıysa yeşil
+                        if ($record->status === 'completed') {
+                            return 'success'; // Yeşil renk
+                        }
+
+                        // Tarih geçmişse kırmızı
+                        if ($dueDate->isPast()) {
+                            return 'danger'; // Kırmızı renk
+                        }
+
+                        // Bugünün tarihi ise sarı
+                        if ($dueDate->isToday()) {
+                            return 'warning'; // Sarı renk
+                        }
+
+                        return null; // Varsayılan renk
+                    }),
                 Tables\Columns\TextColumn::make('priority')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('completed_at')
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('assigned_to')
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('reminder')
                     ->searchable()
                     ->sortable(),
             ])
@@ -147,6 +179,7 @@ class TaskResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
             ])
             ->defaultGroup(Group::make('parent.name')
                 ->collapsible())

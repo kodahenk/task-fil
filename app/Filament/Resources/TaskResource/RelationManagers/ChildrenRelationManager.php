@@ -30,7 +30,7 @@ class ChildrenRelationManager extends RelationManager
                 Forms\Components\Select::make('status')
                     ->options([
                         'pending' => 'Beklemede',
-                        'in-progress' => 'İşlemde',
+                        'in_progress' => 'İşlemde',
                         'completed' => 'Tamamlandı',
                         'rejected' => 'Yarım Bırakıldı',
                     ])->default('pending'),

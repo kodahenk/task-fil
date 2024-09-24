@@ -10,8 +10,11 @@ use Filament\Resources\RelationManagers\RelationManager;
 use App\Filament\Resources\TaskResource\RelationManagers;
 use Carbon\Carbon;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\Alignment;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -107,6 +110,7 @@ class TaskResource extends Resource
                     ->description(
                         fn(Task $record) => $record->parent?->name
                     )
+                    ->wrap()
                     ->searchable()
                     ->sortable(),
 
@@ -144,8 +148,12 @@ class TaskResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->formatStateUsing(function ($state) {
-                        return Carbon::parse($state)->format('Y-m-d');
+                        return
+                            Carbon::parse($state)->format('Y-m-d') .
+                            "<br>" .
+                            Carbon::parse($state)->format('H:i');
                     })
+                    ->alignment(Alignment::Center)
                     ->color(function ($state, $record) {
                         $dueDate = Carbon::parse($state);
                         $today = Carbon::today();
@@ -166,7 +174,10 @@ class TaskResource extends Resource
                         }
 
                         return null; // Varsayılan renk
-                    }),
+                    })
+                    ->weight(FontWeight::Bold)
+                    ->html()
+                    ->fontFamily('font-mono'),
                 Tables\Columns\TextColumn::make('priority')
                     ->searchable()
                     ->sortable(),
@@ -175,14 +186,26 @@ class TaskResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                //
-            ])
+                // proje filtrese
+                Tables\Filters\SelectFilter::make('project_id')
+                    ->options(fn() => \App\Models\Project::pluck('name', 'id'))
+                    ->label('Project')
+                    ->placeholder('Select Project'),
+                // durum filtrele
+                Tables\Filters\SelectFilter::make('status')
+                    ->options([
+                        'pending' => 'Beklemede',
+                        'in_progress' => 'İşlemde',
+                        'completed' => 'Tamamlandı',
+                        'rejected' => 'Yarım Bırakıldı',
+                    ])
+                    ->label('Status')
+                    ->placeholder('Select Status'),
+            ], layout: FiltersLayout::AboveContent)
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()
             ])
-            ->defaultGroup(Group::make('parent.name')
-                ->collapsible())
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

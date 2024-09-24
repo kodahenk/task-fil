@@ -91,6 +91,9 @@ class TaskResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                ->description(
+                    fn(Task $record) => $record->parent?->name
+                )
                     ->searchable()
                     ->sortable(),
 
@@ -109,12 +112,6 @@ class TaskResource extends Resource
 
                         return "{$completedChildren}/{$totalChildren}";
                     }),
-
-
-                    // açıklamada proje adı olsun
-                Tables\Columns\TextColumn::make('parent.name')
-                    ->searchable()
-                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('status')
                     // ->badge()
